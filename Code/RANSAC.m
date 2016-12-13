@@ -29,40 +29,59 @@ ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
 [pcx, pcy, pcz, r, g, b, D_, X, Y,validInd] = depthToCloud_full_RGB(ID, I, './params/calib_xtion.mat');
 Pts = [pcx pcy pcz];
 
+% iteration stuff
+iter = 0;
 maxIterations = 3000;
-inliers = cell(maxIterations, 1); %Max iterations possible for inliers
-
-%Every iteration will pick 4 points and create a homography H from them
-%It will apply H to ALL of the corresponding points found in
-%featureMatch. It will then score how well H did on these matching
-%points with SD. If that score is good enough for a certain point p, it
-%will be added to the inlier of that iteration i. 
-for i = 1:maxIterations
+% number of total points
+numpts = size(Pts, 1);
+% threshold for number of inliers to likely be an irrelevant surface
+num_inlier_threshold = 0.3;
+% threshold for whether a point's distance is consider inlying
+inlier_threshold = 5;
+% keeps track of the largest possible set of points to remove (e.g.
+% the largest plane)
+bestinliers = 0;
+bestnuminliers = 0;
+%Every iteration will pick 4 points and find the equation for a plane
+while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
     %Get random values/points
-    inliers{i,1} = zeros(size(Pts,1),3);
-    pt1 = Pts(randi(size(Pts,1)),:);
-    pt2 = Pts(randi(size(Pts,1)),:);
-    pt3 = Pts(randi(size(Pts,1)),:);
+    inds = randi(numpts, 4, 1);
+    p1 = Pts(inds(1),:);
+    p2 = Pts(inds(2),:);
+    p3 = Pts(inds(3),:);
+    % calculate plane equation
+    n = cross(p2-p1, p3-p1);
+    n = n / norm(n);
+    d = -dot(n, p1);
+    plane = [n(:); d];
     
-    
-    
-    inliers{i,1} = temp(any(temp,2),:);
-    %If 90% of points liked this H, we are done
-    if size(inliers{i,1},1) >= 0.9*size(nZp1,1)
-        break;
+    inliers = zeros(numpts, 1);
+    % precompute divisor for efficiency
+    % note: if necessary, norm squared (n'*n) is much faster
+    divisor = norm(n);    
+    % this for loop could possibly be vectorized out
+    for ii = 1:numpts
+	% add the last 1 for the d coefficient
+	p = [Pts(ii,:), 1];
+	inliers(ii) = (abs(dot(plane, p)) / divisor) < inlier_threshold;
     end
-end
-max = 0;
-index = 1;
-%Find inlier set who casted most votes
-for j = 1:i
-    curr = size(inliers{j,1},1);
-    if curr > max
-        max = curr;
-        index = j;
+    
+    numinliers = sum(inliers);
+    if numinliers > bestnuminliers
+       bestnuminliers = numinliers;
+       bestinliers = inliers;
     end
+    
+    if mod(iter, 10) == 0
+       disp(iter)
+    end
+
+    iter = iter + 1;
 end
-%Return new homography from that set of inliers
-maxLier = inliers{index,1};
-%ret = max;
-ret = est_homography(maxLier(:,3), maxLier(:,4), maxLier(:,1), maxLier(:,2));
+
+Pts = Pts(bestinliers, :);
+
+figure;
+pcshow(Pts, [r g b] / 255);
+drawnow;
+title('3D Point Cloud');
