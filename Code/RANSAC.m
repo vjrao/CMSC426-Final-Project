@@ -1,12 +1,12 @@
 %% Uses RANSAC to remove the table and wall planes
 % Setup Paths and Read RGB and Depth Images
 Path = '../Data/SingleObject/'; 
-SceneNum = 1;
+SceneNum = 0;
 SceneName = sprintf('%0.3d', SceneNum);
 FrameNum = num2str(1);
 
-I = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_rgb.png']);
-ID = imread([Path,'scene_',SceneName,'/frames/image_',FrameNum,'_depth.png']);
+I = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_rgb.png']);
+ID = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_depth.png']);
 
 %% Extract 3D Point cloud
 % Inputs:
@@ -37,7 +37,7 @@ numpts = size(Pts, 1);
 % threshold for number of inliers to likely be an irrelevant surface
 num_inlier_threshold = 0.3;
 % threshold for whether a point's distance is consider inlying
-inlier_threshold = 5;
+inlier_threshold = 2;
 % keeps track of the largest possible set of points to remove (e.g.
 % the largest plane)
 bestinliers = 0;
@@ -55,11 +55,10 @@ while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
     d = -dot(n, p1);
     plane = [n(:); d];
     
-    inliers = zeros(numpts, 1, 'logical');
+    inliers = false(numpts, 1);
     % precompute divisor for efficiency
     % note: if necessary, norm squared (n'*n) is much faster
     divisor = norm(n);
-    inliers = (abs(dot(plane, Pts()) / divisor) < inlier_threshold;
     % this for loop could possibly be vectorized out
     for ii = 1:numpts
 	% add the last 1 for the d coefficient
@@ -81,15 +80,25 @@ while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
 end
 
 colors = [r g b] / 255;
-
+%%
 figure;
 pcshow(Pts, colors);
 drawnow;
 title('Before RANSAC');
 
-Pts = Pts(bestinliers, :);
-colors = colors(bestinliers, :);
-
+% New way
+[n, ~, p] = affine_fit(Pts(bestinliers,:));
+d = -dot(n, p);
+plane = [n(:);d];
+inliers = false(numpts, 1);
+divisor = norm(n);
+for ii = 1:numpts
+	% add the last 1 for the d coefficient
+	p = [Pts(ii,:), 1];
+    inliers(ii) = (abs(dot(plane, p)) / divisor) < inlier_threshold;
+end
+Pts = Pts(~inliers,:);
+colors = colors(~inliers,:);
 figure;
 pcshow(Pts, colors);
 drawnow;
