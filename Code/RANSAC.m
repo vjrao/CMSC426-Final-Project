@@ -55,10 +55,11 @@ while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
     d = -dot(n, p1);
     plane = [n(:); d];
     
-    inliers = zeros(numpts, 1);
+    inliers = zeros(numpts, 1, 'logical');
     % precompute divisor for efficiency
     % note: if necessary, norm squared (n'*n) is much faster
-    divisor = norm(n);    
+    divisor = norm(n);
+    inliers = (abs(dot(plane, Pts()) / divisor) < inlier_threshold;
     % this for loop could possibly be vectorized out
     for ii = 1:numpts
 	% add the last 1 for the d coefficient
@@ -79,9 +80,17 @@ while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
     iter = iter + 1;
 end
 
-Pts = Pts(bestinliers, :);
+colors = [r g b] / 255;
 
 figure;
-pcshow(Pts, [r g b] / 255);
+pcshow(Pts, colors);
 drawnow;
-title('3D Point Cloud');
+title('Before RANSAC');
+
+Pts = Pts(bestinliers, :);
+colors = colors(bestinliers, :);
+
+figure;
+pcshow(Pts, colors);
+drawnow;
+title('After RANSAC');
