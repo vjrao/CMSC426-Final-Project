@@ -37,7 +37,7 @@ numpts = size(Pts, 1);
 % threshold for number of inliers to likely be an irrelevant surface
 num_inlier_threshold = 0.3;
 % threshold for whether a point's distance is consider inlying
-inlier_threshold = 2;
+inlier_threshold = 5;
 % keeps track of the largest possible set of points to remove (e.g.
 % the largest plane)
 bestinliers = 0;
