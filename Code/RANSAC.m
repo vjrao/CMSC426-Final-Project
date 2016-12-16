@@ -1,12 +1,9 @@
-%% Uses RANSAC to remove the table and wall planes
+function [Pts, colors] = RANSAC(imageName)
+% Uses RANSAC to remove the table and wall planes
 % Setup Paths and Read RGB and Depth Images
-Path = '../Data/SingleObject/'; 
-SceneNum = 0;
-SceneName = sprintf('%0.3d', SceneNum);
-FrameNum = num2str(1);
 
-I = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_rgb.png']);
-ID = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_depth.png']);
+I = imread([imageName,'_rgb.png']);
+ID = imread([imageName,'_depth.png']);
 
 %% Extract 3D Point cloud
 % Inputs:
@@ -123,4 +120,5 @@ for q = 1:numTimes
     pcshow(Pts, colors);
     drawnow;
     title(strcat('After RANSAC', int2str(q)));
+end
 end
