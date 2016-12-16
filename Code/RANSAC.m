@@ -29,7 +29,11 @@ ID = imread([Path,'scene_',SceneName,'/frames/frame_',FrameNum,'_depth.png']);
 [pcx, pcy, pcz, r, g, b, D_, X, Y,validInd] = depthToCloud_full_RGB(ID, I, './params/calib_xtion.mat');
 Pts = [pcx pcy pcz];
 
-% iteration stuff
+%% Thresholding
+D_(isnan(D_)) = Inf;
+
+
+%% Iteration stuff
 iter = 0;
 maxIterations = 3000;
 % number of total points
@@ -80,25 +84,26 @@ while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
 end
 
 colors = [r g b] / 255;
-%%
+%% Printing results
 figure;
 pcshow(Pts, colors);
 drawnow;
 title('Before RANSAC');
 
-% New way
+% Create best fit plane of bestinliers and then remove that plane
 [n, ~, p] = affine_fit(Pts(bestinliers,:));
 d = -dot(n, p);
 plane = [n(:);d];
 inliers = false(numpts, 1);
 divisor = norm(n);
 for ii = 1:numpts
-	% add the last 1 for the d coefficient
 	p = [Pts(ii,:), 1];
     inliers(ii) = (abs(dot(plane, p)) / divisor) < inlier_threshold;
 end
+
 Pts = Pts(~inliers,:);
 colors = colors(~inliers,:);
+
 figure;
 pcshow(Pts, colors);
 drawnow;
