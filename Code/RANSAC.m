@@ -1,6 +1,12 @@
-function [Pts, colors] = RANSAC(imageName)
+function [Pts, colors] = RANSAC(imageName, varargin)
     %% Uses RANSAC to remove the table and wall planes
     % Setup Paths and Read RGB and Depth Images
+
+    if nargin > 1
+        showImages = varargin{1};
+    else
+        showImages = false;
+    end
 
     I = imread([imageName,'_rgb.png']);
     ID = imread([imageName,'_depth.png']);
@@ -45,14 +51,14 @@ function [Pts, colors] = RANSAC(imageName)
 
 
     %% RANSACing to get rid of wall and table
-    numTimes = 2;
-    for q = 1:numTimes
+    Total_RANSAC_iters = 2;
+    for q = 1:Total_RANSAC_iters
         iter = 0;
-        maxIterations = 3000;
+        MaxIterations = 50;
         % number of total points
         numpts = size(Pts, 1);
         % threshold for number of inliers to likely be an irrelevant surface
-        num_inlier_threshold = 0.3;
+        num_inlier_threshold = 0.5;
         % threshold for whether a point's distance is consider inlying
         inlier_threshold = 5;
         % keeps track of the largest possible set of points to remove (e.g.
@@ -60,7 +66,7 @@ function [Pts, colors] = RANSAC(imageName)
         bestinliers = 0;
         bestnuminliers = 0;
         %Every iteration will pick 4 points and find the equation for a plane
-        while iter < maxIterations && (bestnuminliers / numpts) < num_inlier_threshold
+        while iter < MaxIterations && (bestnuminliers / numpts) < num_inlier_threshold
             %Get random values/points
             inds = randi(numpts, 4, 1);
             p1 = Pts(inds(1),:);
@@ -89,18 +95,21 @@ function [Pts, colors] = RANSAC(imageName)
                 bestinliers = inliers;
             end
             
-            if mod(iter, 10) == 0
-                disp(iter)
-            end
-            
             iter = iter + 1;
         end
-        
+	if iter == MaxIterations
+	    disp('Warning: RANSAC failed to converge in 50 iterations');
+	else
+	    disp([int2str(iter), ' iterations']);
+	end
+
         % Printing results
-        figure;
-        pcshow(Pts, colors);
-        drawnow;
-        title(strcat('Before RANSAC', int2str(q)));
+	if showImages
+            figure;
+            pcshow(Pts, colors);
+            drawnow;
+            title(strcat('Before RANSAC', int2str(q)));
+	end
         
         % Create best fit plane of bestinliers and then remove that plane
         [n, ~, p] = affine_fit(Pts(bestinliers,:));
@@ -116,9 +125,12 @@ function [Pts, colors] = RANSAC(imageName)
         Pts = Pts(~inliers,:);
         colors = colors(~inliers,:);
         
-        figure;
-        pcshow(Pts, colors);
-        drawnow;
-        title(strcat('After RANSAC', int2str(q)));
+	if showImages
+            figure;
+            pcshow(Pts, colors);
+            drawnow;
+            title(strcat('After RANSAC', int2str(q)));
+	end
+
     end
 end
