@@ -97,6 +97,7 @@ function [Pts, colors] = RANSAC(imageName, varargin)
             
             iter = iter + 1;
         end
+
 	if iter == MaxIterations
 	    disp('Warning: RANSAC failed to converge in 50 iterations');
 	else
@@ -131,6 +132,23 @@ function [Pts, colors] = RANSAC(imageName, varargin)
             drawnow;
             title(strcat('After RANSAC', int2str(q)));
 	end
-
+    end
+    if showImages
+        figure;
+	pcshow(Pts, colors);
+	drawnow;
+	title('Before remove noise');
+    end
+    
+    ptCloud = pointCloud(Pts);
+    [Pts,i,o] = pcdenoise(ptCloud, 'Threshold', 0.1, 'NumNeighbors', 100);
+    Pts = Pts.Location;
+    colors = colors(i,:);
+    
+    if showImages
+        figure;
+	pcshow(Pts, colors);
+	drawnow;
+	title('After remove noise');
     end
 end
