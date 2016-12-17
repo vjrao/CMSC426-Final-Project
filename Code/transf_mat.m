@@ -7,7 +7,7 @@ function M = transf_mat(n, d, s)
     [U,S,V] = svd(A,'econ');
     S_new = 1./S;
     S_new(S_new==inf) = 0;
-    A_old = U*S*V';
+    %A_old = U*S*V';
     A_new = V*S_new*U';
     x_opt = A_new*b;
     R = [1,x_opt(1)*x_opt(2)-x_opt(3),x_opt(1)*x_opt(3)+x_opt(2),0;

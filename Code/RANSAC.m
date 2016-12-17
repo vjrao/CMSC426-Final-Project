@@ -96,11 +96,11 @@ function [Pts, colors] = RANSAC(imageName)
             iter = iter + 1;
         end
         
-        % Printing results
-        figure;
-        pcshow(Pts, colors);
-        drawnow;
-        title(strcat('Before RANSAC', int2str(q)));
+%         % Printing results
+%         figure;
+%         pcshow(Pts, colors);
+%         drawnow;
+%         title(strcat('Before RANSAC', int2str(q)));
         
         % Create best fit plane of bestinliers and then remove that plane
         [n, ~, p] = affine_fit(Pts(bestinliers,:));
@@ -115,10 +115,24 @@ function [Pts, colors] = RANSAC(imageName)
         
         Pts = Pts(~inliers,:);
         colors = colors(~inliers,:);
-        
-        figure;
-        pcshow(Pts, colors);
-        drawnow;
-        title(strcat('After RANSAC', int2str(q)));
+%         
+%         figure;
+%         pcshow(Pts, colors);
+%         drawnow;
+%         title(strcat('After RANSAC', int2str(q)));
     end
+%     figure;
+%     pcshow(Pts, colors);
+%     drawnow;
+%     title('Before remove noise');
+    
+    ptCloud = pointCloud(Pts);
+    [Pts,i,o] = pcdenoise(ptCloud, 'Threshold', 0.1, 'NumNeighbors', 100);
+    Pts = Pts.Location;
+    colors = colors(i,:);
+    
+%     figure;
+%     pcshow(Pts, colors);
+%     drawnow;
+%     title('After remove noise');
 end

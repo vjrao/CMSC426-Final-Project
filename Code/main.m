@@ -1,6 +1,6 @@
 % Setup Paths and Read RGB and Depth Images
 Path = '../Data/SingleObject/'; 
-SceneNum = 0;
+SceneNum = 1;
 SceneName = sprintf('%0.3d', SceneNum);
 FrameNum = num2str(1);
 
