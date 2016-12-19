@@ -64,6 +64,11 @@ colors2 = [r g b] / 255;
 numpts = min([size(Pts, 1), size(Pts2, 1)]);
 Pts = Pts(1:numpts, :);
 Pts2 = Pts2(1:numpts, :);
+
+Pts3 = ICP(Pts, Pts2, 0);
+figure, pcshow(Pts3);
+
+%{
 ptCloud = pointCloud(Pts);
 normals = pcnormals(ptCloud, 10);
 M = transf_mat(normals, Pts, Pts2);
@@ -73,6 +78,7 @@ Pts3 = zeros(size(Pts));
 for ii=1:numpts
     Pts3(ii,:) = M * Pts2(ii, :)';
 end
+%}
 
 %{
 dists = zeros((numpts-1)*(numpts-2)/2, 1);
@@ -85,8 +91,6 @@ for ii=1:numpts
 end
 mindist = min(dists);
 %}
-Pts4 = pcmerge(pointCloud(Pts(:,1:3)), pointCloud(Pts3(:,1:3)), 2);
-figure, pcshow(Pts4);
 
 %{
 k = boundary(Pts);
