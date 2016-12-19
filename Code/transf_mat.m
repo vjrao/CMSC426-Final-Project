@@ -8,12 +8,7 @@ function M = transf_mat(n, d, s)
     S_new = 1./S;
     S_new(S_new==inf) = 0;
     %A_old = U*S*V';
-    size(V)
-    size(S_new)
-    size(U')
     A_new = V*S_new*U';
-    size(A_new)
-    size(b)
     x_opt = A_new*b;
     R = [1,x_opt(1)*x_opt(2)-x_opt(3),x_opt(1)*x_opt(3)+x_opt(2),0;
         x_opt(3),x_opt(1)*x_opt(2)*x_opt(3)+1,x_opt(2)*x_opt(3)-x_opt(1),0;
