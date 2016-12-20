@@ -10,9 +10,14 @@ function M = transf_mat(n, d, s)
     %A_old = U*S*V';
     A_new = V*S_new*U';
     x_opt = A_new*b;
-    R = [1,x_opt(1)*x_opt(2)-x_opt(3),x_opt(1)*x_opt(3)+x_opt(2),0;
-        x_opt(3),x_opt(1)*x_opt(2)*x_opt(3)+1,x_opt(2)*x_opt(3)-x_opt(1),0;
-        -x_opt(2),x_opt(1),1,0;
+    al = x_opt(1);
+    bet = x_opt(2);
+    gam = x_opt(3);
+
+
+    R = [cos(gam)*cos(bet),-sin(gam)*cos(al)+cos(gam)*sin(bet)*sin(al),sin(gam)*sin(al)+cos(gam)*sin(bet)*cos(al),0;
+        sin(gam)*cos(bet),cos(gam)*cos(al)+sin(gam)*sin(bet)*sin(al),-cos(gam)*sin(al)+sin(gam)*sin(bet)*cos(al),0;
+        -sin(bet),cos(bet)*sin(al), cos(bet)*cos(al),0;
         0,0,0,1];
     T = eye(4);
     T(:,4) = [x_opt(4);x_opt(5);x_opt(6);1];
