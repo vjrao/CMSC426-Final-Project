@@ -50,7 +50,7 @@ colors = [r g b] / 255;
 [Pts, colors] = RANSAC(Pts, colors);
 [Pts, colors] = denoise(Pts, colors);
 %figure, pcshow(Pts, colors);
-
+%%
 name = strcat(Path,'scene_',sprintf('%0.3d',scenes(scene)), '/frames/frame_', int2str(2));
 I = imread([name,'_rgb.png']);
 ID = imread([name,'_depth.png']);
@@ -60,18 +60,43 @@ colors2 = [r g b] / 255;
 [Pts2, colors2] = RANSAC(Pts2, colors2);
 [Pts2, colors2] = denoise(Pts2, colors2);
 %figure, pcshow(Pts2, colors2);
-
+%%
 numpts = min([size(Pts, 1), size(Pts2, 1)]);
 Pts = Pts(1:numpts, :);
 Pts2 = Pts2(1:numpts, :);
 ptCloud = pointCloud(Pts);
 normals = pcnormals(ptCloud, 10);
+
+sensorCenter = [0 0 0];
+x = ptCloud.Location(1:50:end,1);
+y = ptCloud.Location(1:50:end,2);
+z = ptCloud.Location(1:50:end,3);
+u = normals(1:end,1);
+v = normals(1:end,2);
+w = normals(1:end,3);
+
+for k = 1:numel(x)
+    p1 = sensorCenter - [x(k), y(k), z(k)];
+    p2 = [u(k) v(k) w(k)];
+    angle = atan2(norm(cross(p1, p2)), p1*p2');
+    if angle > pi/2 || angle < -pi/2
+        u(k) = -u(k);
+        v(k) = -v(k);
+        w(k) = -w(k);
+    end
+end
+% figure, pcshow(Pts, colors); hold on;
+% quiver3(x,y,z,u,v,w);
+% hold off;
+
+normals = [u v w];
+
 M = transf_mat(normals, Pts, Pts2);
 Pts = [Pts, ones(numpts, 1)];
 Pts2 = [Pts2, ones(numpts, 1)];
 Pts3 = zeros(size(Pts));
 for ii=1:numpts
-    Pts3(ii,:) = M * Pts2(ii, :)';
+    Pts3(ii,:) = M * Pts2(ii,:)';
 end
 
 %{
@@ -99,15 +124,7 @@ idx = knnsearch(bound, bound2);
 %}
 
 %{
-x = ptCloud.Location(1:50:end,1);
-y = ptCloud.Location(1:50:end,2);
-z = ptCloud.Location(1:50:end,3);
-u = normals(1:50:end,1);
-v = normals(1:50:end,2);
-w = normals(1:50:end,3);
-figure, pcshow(Pts, colors); hold on;
-quiver3(x,y,z,u,v,w);
-hold off;
+
 %}
 
 
